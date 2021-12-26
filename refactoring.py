@@ -120,7 +120,7 @@ class pullUpListener(JavaParserLabeledListener):
         return class_methods_to_refactor
 
 
-def __main__ == "__name__":
+if __main__ == "__name__":
     stream = FileStream("test.java", encoding='utf-8')
     lexer = JavaLexer(stream)
     token_stream = CommonTokenStream(lexer)
