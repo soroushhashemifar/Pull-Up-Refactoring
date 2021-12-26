@@ -12,25 +12,38 @@ class pullUpListener(JavaParserLabeledListener):
         self.__classes = []
         self.__parent_and_child_classes = {}
         self.__methods_of_classes = {}
-        self.__number_of_classes = 0
         self.__current_class_or_interface = None
 
     @property
     def get_methods_and_classes(self):
+        """
+        This method is the getter of __methods_of_classes.
+
+        :param:
+        :return: a dictionary of methods belong to each class
+        """
+        
         return self.__methods_of_classes
 
     @property
     def get_parents_and_children(self):
+        """
+        This method is the getter of __parent_and_child_classes.
+
+        :param:
+        :return: a dictionary of parent of each class
+        """
+        
         return self.__parent_and_child_classes
 
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         """
+        This method add the current class, its parent to the proper dictionary.
 
-        :param ctx:
-        :return:
+        :param: context of ClassDeclarationContext
+        :return: None
         """
 
-        # self.__number_of_classes += 1
         self.__current_class_or_interface = ctx.IDENTIFIER().getText()
         self.__classes.append(ctx.IDENTIFIER().getText())
         self.__methods_of_classes[self.__current_class_or_interface] = []
@@ -43,11 +56,12 @@ class pullUpListener(JavaParserLabeledListener):
 
     def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
         """
+        This method add the current class, its parent to the proper dictionary.
 
-        :param ctx:
-        :return:
+        :param: context of InterfaceDeclarationContext
+        :return: None
         """
-        self.__number_of_classes += 1
+        
         self.__current_class_or_interface = ctx.IDENTIFIER().getText()
         self.__classes.append(ctx.IDENTIFIER().getText())
         self.__methods_of_classes[self.__current_class_or_interface] = []
@@ -57,13 +71,24 @@ class pullUpListener(JavaParserLabeledListener):
 
     def enterMethodDeclaration(self, ctx: JavaParserLabeled.MethodDeclarationContext):
         """
+        This method add the methods of the current class to the proper dictionary.
 
-        :param ctx:
-        :return:
+        :param: context of MethodDeclarationContext
+        :return: None
         """
+        
         self.__methods_of_classes[self.__current_class_or_interface].append(ctx.IDENTIFIER().getText())
 
     def get_pullups(self):
+        """
+        This method collects the situations of pullups and return them as a dictionary,
+        where keys represent the class and values represent a list of methods that must be pulled up.
+
+        :param: None
+        :return: a dictionary of class-methods
+        """
+        
+        # Collecting a dictionary of classes and their children.
         parent_children = {}
         for classname in set(self.get_parents_and_children.values()):
             children = parent_children.get(classname, [])
@@ -72,10 +97,12 @@ class pullUpListener(JavaParserLabeledListener):
                     children.append(key)
 
             parent_children[classname] = children
-
+            
         class_methods_to_refactor = {}
         for key, value in parent_children.items():
             methods_to_refactor = []
+            # Getting intersection of methods between each pair of children of a class,
+            # so we can collect the common methods between them
             for classes_tuple in list(itertools.combinations(value, 2)):
                 methods1 = set(self.get_methods_and_classes[classes_tuple[0]])
                 methods2 = set(self.get_methods_and_classes[classes_tuple[1]])
@@ -85,6 +112,7 @@ class pullUpListener(JavaParserLabeledListener):
                 if len(methods_to_refactor_) != 0:
                     methods_to_refactor.extend(methods_to_refactor_)
 
+            # The class is considered only if there is any common method among its children
             methods_to_refactor = list(set(methods_to_refactor))
             if len(methods_to_refactor) != 0:
                 class_methods_to_refactor[key] = methods_to_refactor
@@ -92,13 +120,14 @@ class pullUpListener(JavaParserLabeledListener):
         return class_methods_to_refactor
 
 
-stream = FileStream("/home/soroushh/Downloads/test.java", encoding='utf-8')
-lexer = JavaLexer(stream)
-token_stream = CommonTokenStream(lexer)
-parser = JavaParserLabeled(token_stream)
-parse_tree = parser.compilationUnit()
-walker = ParseTreeWalker()
-pu_listener = pullUpListener()
-walker.walk(t=parse_tree, listener=pu_listener)
+def __main__ == "__name__":
+    stream = FileStream("test.java", encoding='utf-8')
+    lexer = JavaLexer(stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = JavaParserLabeled(token_stream)
+    parse_tree = parser.compilationUnit()
+    walker = ParseTreeWalker()
+    pu_listener = pullUpListener()
+    walker.walk(t=parse_tree, listener=pu_listener)
 
-print(pu_listener.get_pullups())
+    print(pu_listener.get_pullups())
