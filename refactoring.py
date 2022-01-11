@@ -7,6 +7,11 @@ import itertools
 
 
 class pullUpListener(JavaParserLabeledListener):
+    
+    """
+    This class investigate the situations for PullUp refactoring between 
+    prent classes and inherited ones.
+    """
 
     def __init__(self):
         self.__classes = []
