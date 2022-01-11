@@ -124,15 +124,34 @@ class pullUpListener(JavaParserLabeledListener):
 
         return class_methods_to_refactor
 
+    
+def get_all_filenames(walk_dir, valid_extensions):
+    """get all files of a directory
+    Args:
+        walk_dir ([type]): [description]
+        valid_extensions ([type]): [description]
+    Yields:
+        [type]: [description]
+    """
+    for root, sub_dirs, files in os.walk(walk_dir):
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            if any([file_name.endswith(extension) for extension in valid_extensions]) and "test" not in file_path:
+                yield file_path
+                
 
 if __main__ == "__name__":
-    stream = FileStream("test.java", encoding='utf-8')
-    lexer = JavaLexer(stream)
-    token_stream = CommonTokenStream(lexer)
-    parser = JavaParserLabeled(token_stream)
-    parse_tree = parser.compilationUnit()
-    walker = ParseTreeWalker()
-    pu_listener = pullUpListener()
-    walker.walk(t=parse_tree, listener=pu_listener)
+    walk_dir = "path\\of\\directory"
+    valid_extensions = ['.java']
+    
+    for file_name in get_all_filenames(walk_dir, valid_extensions):
+        stream = FileStream(file_name, encoding='utf-8')
+        lexer = JavaLexer(stream)
+        token_stream = CommonTokenStream(lexer)
+        parser = JavaParserLabeled(token_stream)
+        parse_tree = parser.compilationUnit()
+        walker = ParseTreeWalker()
+        pu_listener = pullUpListener()
+        walker.walk(t=parse_tree, listener=pu_listener)
 
-    print(pu_listener.get_pullups())
+        print(file_name, "\n", pu_listener.get_pullups())
