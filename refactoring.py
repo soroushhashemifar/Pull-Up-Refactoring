@@ -141,7 +141,7 @@ def get_all_filenames(walk_dir, valid_extensions):
                 yield file_path
                 
 
-if __main__ == "__name__":
+if __name__ == '__main__':
     walk_dir = "path\\of\\directory"
     valid_extensions = ['.java']
     
